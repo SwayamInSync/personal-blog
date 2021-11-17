@@ -1,58 +1,110 @@
-import React from "react";
+import axios from "axios";
+import { useContext, useEffect, useState } from "react";
+import { useLocation } from "react-router";
+import { Link } from "react-router-dom";
+import { Context } from "../../context/Context";
 import "./singlepost.css";
+import ReactMarkdown from "react-markdown";
 
-function SinglePost() {
+export default function SinglePost() {
+  const location = useLocation();
+  const path = location.pathname.split("/")[2];
+  const [post, setPost] = useState({});
+  const PF = "http://localhost:3001/images/";
+  const { user } = useContext(Context);
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [updateMode, setUpdateMode] = useState(false);
+
+  useEffect(() => {
+    const getPost = async () => {
+      const res = await axios.get("/posts/" + path);
+      setPost(res.data);
+      setTitle(res.data.title);
+      setDesc(res.data.desc);
+    };
+    getPost();
+  }, [path]);
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/posts/${post._id}`, {
+        data: { username: user.username },
+      });
+      window.location.replace("/");
+    } catch (err) {}
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await axios.put(`/posts/${post._id}`, {
+        username: user.username,
+        title,
+        desc,
+      });
+      setUpdateMode(false);
+    } catch (err) {}
+  };
+
   return (
     <div className="singlePost">
       <div className="singlePostWrapper">
-        <img
-          src="https://images.unsplash.com/photo-1636813928190-f9ed86d7f1c5?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1737&q=80"
-          className="singlePostImg"
-          alt=""
-        />
-        <h1 className="singlePostTitle">
-          Lorem ipsum dolor sit amet.
-          <div className="singlePostEdit">
-            <i className="singlePostIcon far fa-edit"></i>
-            <i className="singlePostIcon fas fa-trash-alt"></i>
-          </div>
-        </h1>
+        {post.photo && (
+          <img src={PF + post.photo} alt="" className="singlePostImg" />
+        )}
+        {updateMode ? (
+          <input
+            type="text"
+            value={title}
+            className="singlePostTitleInput"
+            autoFocus
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        ) : (
+          <h1 className="singlePostTitle">
+            {title}
+            {post.username === user?.username && (
+              <div className="singlePostEdit">
+                <i
+                  className="singlePostIcon far fa-edit"
+                  onClick={() => setUpdateMode(true)}
+                ></i>
+                <i
+                  className="singlePostIcon far fa-trash-alt"
+                  onClick={handleDelete}
+                ></i>
+              </div>
+            )}
+          </h1>
+        )}
         <div className="singlePostInfo">
           <span className="singlePostAuthor">
-            Author: <b>Swayam Singh</b>
+            Author:
+            <Link to={`/?user=${post.username}`} className="link">
+              <b> {post.username}</b>
+            </Link>
           </span>
-          <span className="singlePostDate">1 hour ago</span>
+          <span className="singlePostDate">
+            {new Date(post.createdAt).toDateString()}
+          </span>
         </div>
-        <p className="singlePostDesc">
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Excepturi
-          quidem animi fuga ea illo similique sit facilis, nemo tempora
-          temporibus esse, cupiditate facere laboriosam qui molestiae veniam.
-          Harum perferendis id, nesciunt eum corrupti beatae! Quod numquam
-          temporibus ut harum? Sed ullam, iusto maxime laborum nesciunt fuga
-          esse mollitia eaque eligendi nam similique! Repudiandae dolores
-          perspiciatis maiores quidem explicabo vero voluptates laborum delectus
-          doloremque. Distinctio, suscipit. Impedit ipsam quia itaque
-          voluptatibus maxime enim quisquam harum similique blanditiis rerum
-          voluptate doloremque ipsum et laudantium, quam ullam, laborum sunt vel
-          porro totam aspernatur tempora. Consequatur ea blanditiis eius aperiam
-          assumenda quasi deserunt, soluta quis, eum minima eveniet harum
-          molestiae. Earum, aut labore eligendi quibusdam magni doloremque
-          maiores sequi ad cupiditate nesciunt pariatur, maxime inventore illo
-          veniam nulla, consequuntur temporibus dicta tenetur. Perspiciatis quam
-          molestias dolore dicta ratione, minus quos quasi? Et, modi omnis ipsam
-          ipsum quasi placeat veniam laborum architecto eius odio dolorum.
-          voluptate doloremque ipsum et laudantium, quam ullam, laborum sunt vel
-          porro totam aspernatur tempora. Consequatur ea blanditiis eius aperiam
-          assumenda quasi deserunt, soluta quis, eum minima eveniet harum
-          molestiae. Earum, aut labore eligendi quibusdam magni doloremque
-          maiores sequi ad cupiditate nesciunt pariatur, maxime inventore illo
-          veniam nulla, consequuntur temporibus dicta tenetur. Perspiciatis quam
-          molestias dolore dicta ratione, minus quos quasi? Et, modi omnis ipsam
-          ipsum quasi placeat veniam laborum architecto eius odio dolorum.
-        </p>
+        {updateMode ? (
+          <textarea
+            className="singlePostDescInput"
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+          />
+        ) : (
+          <p className="singlePostDesc">
+            <ReactMarkdown>{desc}</ReactMarkdown>
+          </p>
+        )}
+        {updateMode && (
+          <button className="singlePostButton" onClick={handleUpdate}>
+            Update
+          </button>
+        )}
       </div>
     </div>
   );
 }
-
-export default SinglePost;

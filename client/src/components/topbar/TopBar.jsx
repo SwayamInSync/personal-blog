@@ -1,16 +1,22 @@
-import React from "react";
-import "./topbar.css";
+import { useContext } from "react";
 import { Link } from "react-router-dom";
+import { Context } from "../../context/Context";
+import "./topbar.css";
 
-function TopBar() {
-  const user = true;
+export default function TopBar() {
+  const { user, dispatch } = useContext(Context);
+  const PF = "http://localhost:3001/images/";
+
+  const handleLogout = () => {
+    dispatch({ type: "LOGOUT" });
+  };
   return (
     <div className="top">
       <div className="topLeft">
-        <i className="topIcon fa-brands fa-facebook-square"></i>
-        <i className="topIcon fa-brands fa-twitter-square"></i>
-        <i className="topIcon fa-brands fa-pinterest-square"></i>
-        <i className="topIcon fa-brands fa-instagram-square"></i>
+        <i className="topIcon fab fa-facebook-square"></i>
+        <i className="topIcon fab fa-twitter-square"></i>
+        <i className="topIcon fab fa-pinterest-square"></i>
+        <i className="topIcon fab fa-instagram-square"></i>
       </div>
       <div className="topCenter">
         <ul className="topList">
@@ -34,16 +40,16 @@ function TopBar() {
               WRITE
             </Link>
           </li>
-          <li className="topListItem">{user && "LOGOUT"}</li>
+          <li className="topListItem" onClick={handleLogout}>
+            {user && "LOGOUT"}
+          </li>
         </ul>
       </div>
       <div className="topRight">
         {user ? (
-          <img
-            className="topImg"
-            src="https://pbs.twimg.com/profile_images/1432684411569328129/yuDHxvSj_400x400.jpg"
-            alt=""
-          />
+          <Link to="/settings">
+            <img className="topImg" src={PF + user.profilePic} alt="" />
+          </Link>
         ) : (
           <ul className="topList">
             <li className="topListItem">
@@ -58,11 +64,8 @@ function TopBar() {
             </li>
           </ul>
         )}
-
-        <i className="topSearchIcon fa-solid fa-magnifying-glass"></i>
+        <i className="topSearchIcon fas fa-search"></i>
       </div>
     </div>
   );
 }
-
-export default TopBar;
